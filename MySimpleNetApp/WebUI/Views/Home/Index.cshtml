@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Home";
+    var databaseConnected = ViewData["DatabaseConnected"] as bool? ?? false;
+}
+
+<div class="text-center mb-4">
+    <h1 class="display-4">Welcome</h1>
+    <p class="lead">A small web app that shows how code gets to the cloud on its own.</p>
+</div>
+
+<p class="db-status" role="status">
+    <span class="status-dot @(databaseConnected ? "status-ok" : "status-fail")" aria-hidden="true"></span>
+    <span>@(databaseConnected ? "Database connected" : "Database disconnected")</span>
+</p>
+
+<h2 class="h4">What this project is</h2>
+<p>
+    This is a demo project, not a real product. The goal is to show the full path from source code
+    to a public website, with no manual steps.
+</p>
+
+<h2 class="h4">How it works</h2>
+<ul>
+    <li><strong>App:</strong> a simple ASP.NET Core MVC web app (.NET 8).</li>
+    <li><strong>Image:</strong> the app is packed into a Docker image and pushed to Docker Hub.</li>
+    <li><strong>Cloud:</strong> Azure Container Apps runs that image. Terraform creates every resource.</li>
+    <li><strong>Pipeline:</strong> GitHub Actions builds, tests and deploys on every push to main.</li>
+    <li><strong>Tests:</strong> unit tests and UI tests (Playwright).</li>
+</ul>
+
+<h2 class="h4">What it shows</h2>
+<ul>
+    <li>Infrastructure is code, not clicks in a portal.</li>
+    <li>Every deploy is tested before it goes out.</li>
+    <li>The whole setup can be rebuilt from this repository.</li>
+</ul>
+
+<p class="text-muted">
+    The app sleeps when nobody uses it, so the running cost is close to zero.
+</p>

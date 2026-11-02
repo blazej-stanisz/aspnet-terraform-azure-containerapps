@@ -1,0 +1,18 @@
+1. Application Code
+	Generate simple .Net application
+	commands: 
+		- dotnet new mvc -n MySimpleNetApp
+		- cd MySimpleNetApp
+		- dotnet restore
+		- dotnet build
+		- docker init
+		- docker build -t blazejs/mysimplenetapp_ui:1.0 .
+		- docker run -p 8080:8080 --name mysimplenetapp_ui blazejs/mysimplenetapp_ui:1.0
+		- 
+Git
+GitHub
+Docker
+Docker Hub
+CI/CD Pipeline
+Terraform
+Azure

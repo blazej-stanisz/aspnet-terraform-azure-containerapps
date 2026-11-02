@@ -1,0 +1,52 @@
+﻿@model List<TodoItem>
+@{
+    ViewData["Title"] = "Todo List";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>Tasks are stored in a PostgreSQL database. Add a task and it appears in the list right away.</p>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-warning" role="alert">@error</div>
+}
+
+<form asp-action="AddTodo" method="post" class="row g-2 align-items-center mb-4">
+    <div class="col-12 col-md">
+        <label for="title" class="visually-hidden">Task</label>
+        <input id="title" name="title" class="form-control" maxlength="200"
+               placeholder="What needs to be done?" autocomplete="off" autofocus />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Add task</button>
+    </div>
+</form>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No tasks yet. Add the first one above.</p>
+}
+else
+{
+    <table class="table table-sm table-striped align-middle">
+        <thead>
+            <tr>
+                <th scope="col" style="width: 4rem;">Id</th>
+                <th scope="col">Task</th>
+                <th scope="col" style="width: 12rem;">Added (UTC)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Title</td>
+                    <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
