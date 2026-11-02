@@ -1,0 +1,102 @@
+@model AppMetricsViewModel
+@{
+    ViewData["Title"] = "App metrics";
+}
+
+<h1>App metrics</h1>
+
+<p class="text-muted">
+    Snapshot of the in-process Prometheus registry, taken at
+    <strong>@Model.GeneratedAt.ToString("HH:mm:ss")</strong>. The page refreshes every 10 seconds.
+</p>
+
+<div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
+    @foreach (var tile in Model.Tiles)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase">@tile.Label</div>
+                    <div class="fs-4 fw-semibold">@tile.Value</div>
+                    @if (tile.Hint is not null)
+                    {
+                        <div class="small text-muted">@tile.Hint</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@foreach (var table in Model.Tables)
+{
+    <h2 class="h5 mt-4">@table.Title</h2>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+            <thead>
+                <tr>
+                    @foreach (var column in table.Columns)
+                    {
+                        <th scope="col">@column</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (table.Rows.Count == 0)
+                {
+                    <tr>
+                        <td colspan="@table.Columns.Count" class="text-muted">No data yet.</td>
+                    </tr>
+                }
+                @foreach (var row in table.Rows)
+                {
+                    <tr>
+                        @foreach (var cell in row)
+                        {
+                            <td>@cell</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<details class="mt-4">
+    <summary>All metric families (@Model.Families.Count)</summary>
+
+    <div class="table-responsive mt-2">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Family</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Samples</th>
+                    <th scope="col">Help</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var family in Model.Families)
+                {
+                    <tr>
+                        <td><code>@family.Name</code></td>
+                        <td>@family.Type</td>
+                        <td>@family.SampleCount</td>
+                        <td class="small text-muted">@family.Help</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<p class="mt-4">
+    <a href="~/metrics">Raw Prometheus endpoint (/metrics)</a>
+    <span class="text-muted">|</span>
+    <a href="~/AppMetrics">Refresh now</a>
+</p>
+
+@section Scripts {
+    <script>setTimeout(function () { window.location.reload(); }, 10000);</script>
+}

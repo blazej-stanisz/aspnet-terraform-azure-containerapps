@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MySimpleNetApp.WebUI.Data;
+using MySimpleNetApp.WebUI.Monitoring;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 builder.Services.AddScoped<IDatabaseConnectionChecker, DatabaseConnectionChecker>();
+builder.Services.AddSingleton<IMetricsSnapshotProvider, PrometheusMetricsSnapshotProvider>();
 
 var app = builder.Build();
 
@@ -26,6 +29,8 @@ await DatabaseInitializer.InitializeAsync(app.Services, app.Logger);
 
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseHttpMetrics();
+app.MapMetrics();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
