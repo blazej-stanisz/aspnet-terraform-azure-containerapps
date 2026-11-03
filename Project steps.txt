@@ -6,11 +6,42 @@
 		- dotnet restore
 		- dotnet build
 		- docker init
-		- docker build -t blazejs/mysimplenetapp_ui:1.0 .
-		- docker run -p 8080:8080 --name mysimplenetapp_ui blazejs/mysimplenetapp_ui:1.0
-		- 
+		- docker build -t blazejs/mysimplenetapp_ui:1.2 .
+		- docker run -p 8080:8080 --name mysimplenetapp_ui blazejs/mysimplenetapp_ui:1.2
+		- docker push blazejs/mysimplenetapp_ui:1.2
+2. Tools
+		- winget install --id Microsoft.AzureCLI -e --accept-source-agreements --accept-package-agreements
+		- winget install --id Hashicorp.Terraform -e --accept-source-agreements --accept-package-agreements
+		- winget install --id GitHub.cli -e --accept-source-agreements --accept-package-agreements
+
+3. AZ configuration
+		- az login
+		- dotnet run --project WebUI --urls http://localhost:5033
+		- curl -s -w "\nstatus: %{http_code}\n" http://localhost:5033/health
+		- curl -s -w "\nstatus: %{http_code}\n" http://localhost:5033/health/ready
+
+4. Terraform providers registering
+		- az provider register --namespace Microsoft.App --wait
+		- az provider register --namespace Microsoft.OperationalInsights --wait
+ 		- az provider register --namespace Microsoft.Storage --wait
+		- az provider register --namespace Microsoft.DBforPostgreSQL --wait
+		- az provider show --namespace Microsoft.App --query registrationState --output tsv
+		- az group create --name rg-mysimple-tfstate --location germanywestcentral --output table
+		- $sa = "stmysimple4811"
+			az storage account create --name $sa --resource-group rg-mysimple-tfstate --location germanywestcentral --sku Standard_LRS --kind StorageV2 --min-tls-version TLS1_2 --allow-blob-public-access false --output table
+		- az storage account blob-service-properties update --account-name $sa --enable-versioning true --enable-delete-retention true --delete-retention-days 7 --output table
+		- $scope = az storage account show --name $sa --resource-group rg-mysimple-tfstate --query id --output tsv
+			$uid = az ad signed-in-user show --query id --output tsv
+			az role assignment create --assignee-object-id $uid --assignee-principal-type User --role "Storage Blob Data Contributor" --scope $scope --output table
+		- az storage container create --name tfstate --account-name $sa --auth-mode login --output table
+		- az storage container list --account-name $sa --auth-mode login --output table
+		- az group create --name rg-mysimple-dev --location germanywestcentral --output table
+		- az group create --name rg-mysimple-release --location germanywestcentral --output table
+		
+
+
 Git
-GitHub
+GitHubdocker 
 Docker
 Docker Hub
 CI/CD Pipeline
