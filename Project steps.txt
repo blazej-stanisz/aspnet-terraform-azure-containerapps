@@ -6,7 +6,7 @@
 		- dotnet restore
 		- dotnet build
 		- docker init
-		- docker build -t blazejs/mysimplenetapp_ui:1.2 .
+		- docker build -t blazejs/mysimplenetapp_ui:1.4 .
 		- docker run -p 8080:8080 --name mysimplenetapp_ui blazejs/mysimplenetapp_ui:1.2
 		- docker push blazejs/mysimplenetapp_ui:1.2
 2. Tools
@@ -37,6 +37,18 @@
 		- az storage container list --account-name $sa --auth-mode login --output table
 		- az group create --name rg-mysimple-dev --location germanywestcentral --output table
 		- az group create --name rg-mysimple-release --location germanywestcentral --output table
+
+5. Terraform init
+		- cd C:\Users\blaze\repos\aspnet-terraform-azure-containerapps\MySimpleNetApp\infra
+		- terraform init
+		- terraform fmt -recursive
+		- terraform validate
+		- az storage blob list --container-name tfstate --account-name stmysimple4811 --auth-mode login --output table
+		- terraform fmt -recursive
+		- terraform validate
+		- terraform plan "-out=tfplan"
+		- terraform apply tfplan
+		
 		
 
 
