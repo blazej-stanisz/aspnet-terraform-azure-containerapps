@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+      - name: Restore NuGet packages
+        run: dotnet restore MySimpleNetApp/MySimpleNetApp.sln
+      - name: Build solution (Release)
+        run: dotnet build MySimpleNetApp/MySimpleNetApp.sln --configuration Release --no-restore
+      - name: Run unit tests
+        run: dotnet test MySimpleNetApp/UnitTests/UnitTests.csproj --configuration Release --no-build
+

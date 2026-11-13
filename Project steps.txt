@@ -48,11 +48,12 @@
 		- terraform validate
 		- terraform plan "-out=tfplan"
 		- terraform apply tfplan
-		
-		
+	
+6. GitHub
+		- winget install --id rhysd.actionlint --exact --source winget
+		- actionlint --version
+		- actionlint .github/workflows/ci.yml
 
-
-Git
 GitHubdocker 
 Docker
 Docker Hub
