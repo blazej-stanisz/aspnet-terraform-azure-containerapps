@@ -26,4 +26,12 @@ jobs:
         run: dotnet build MySimpleNetApp/MySimpleNetApp.sln --configuration Release --no-restore
       - name: Run unit tests
         run: dotnet test MySimpleNetApp/UnitTests/UnitTests.csproj --configuration Release --no-build
-
+  docker-build:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Build image
+        run: docker build --tag mysimplenetapp-ui:ci MySimpleNetApp/WebUI
