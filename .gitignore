@@ -8,12 +8,6 @@ TestResults/
 *.sln.docstates
 ReviewQuestions
 
-# Node / Playwright
-node_modules/
-test-results/
-playwright-report/
-blob-report/
-
 # Terraform
 .terraform/
 *.tfstate

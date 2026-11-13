@@ -13,7 +13,7 @@ show how it is built, tested, containerized and (soon) deployed to Azure.
 - Swagger UI for the API
 - Metrics for the running app: an in-app dashboard and a Prometheus endpoint
 - Database status indicator on the home page
-- Unit tests and Playwright UI tests
+- Unit tests
 - The whole stack starts with a single `docker compose up`
 
 ## Stack
@@ -24,7 +24,7 @@ show how it is built, tested, containerized and (soon) deployed to Azure.
 | Data | PostgreSQL 16, EF Core 8, Npgsql |
 | API | ASP.NET Core controllers, Swashbuckle (OpenAPI) |
 | Monitoring | prometheus-net with a small dashboard page |
-| Tests | xUnit, Playwright .NET (NUnit runner) |
+| Tests | xUnit |
 | Runtime | Docker, Docker Compose |
 
 ## Docker image
