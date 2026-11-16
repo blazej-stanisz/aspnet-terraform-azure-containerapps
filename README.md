@@ -51,6 +51,16 @@ docker compose up -d --build
 
 Stop the stack with `docker compose down` (add `-v` to drop the database volume as well).
 
+## Tests
+
+Unit tests use xUnit and do not need a running database:
+
+```bash
+dotnet test MySimpleNetApp/UnitTests/UnitTests.csproj
+```
+
+The command runs from the repository root and executes 27 test cases.
+
 ## API
 
 | Method | Path | Result |
@@ -60,4 +70,3 @@ Stop the stack with `docker compose down` (add `-v` to drop the database volume 
 | POST | `/api/todos` | 201 with the created task |
 | PUT | `/api/todos/{id}` | 204 or 404 |
 | DELETE | `/api/todos/{id}` | 204 or 404 |
-
