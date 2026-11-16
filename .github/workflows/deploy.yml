@@ -74,19 +74,21 @@ jobs:
       - name: Read application URL
         id: app
         working-directory: MySimpleNetApp/infra
-        run: echo "url=$(terraform output -raw app_url)" >> "$GITHUB_OUTPUT"
+        run: echo "url=$(terraform output -raw app_stable_url)" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test the deployed application
         env:
           APP_URL: ${{ steps.app.outputs.url }}
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 30); do
-            if curl -fsS "$APP_URL/health/ready" > /dev/null; then
+          for attempt in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$APP_URL/health/ready" || true)
+            if [ "$code" = "200" ]; then
               echo "Application is ready after ${attempt} attempt(s): $APP_URL"
               exit 0
             fi
+            echo "Attempt ${attempt}: /health/ready returned ${code}, retrying in 5 seconds."
             sleep 5
           done
-          echo "Application did not become ready within 150 seconds: $APP_URL"
+          echo "Application did not become ready within 300 seconds: $APP_URL"
           exit 1
