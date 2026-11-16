@@ -1,0 +1,92 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        description: "Docker image tag to deploy, usually the commit SHA."
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Docker image tag that already exists on Docker Hub."
+        required: true
+        default: "1.4"
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: "true"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "0"
+
+jobs:
+  terraform:
+    name: Terraform apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: 1.16.6
+          terraform_wrapper: false
+
+      - name: Initialize Terraform
+        working-directory: MySimpleNetApp/infra
+        run: |
+          terraform init -input=false \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}" \
+            -backend-config="key=dev/terraform.tfstate" \
+            -backend-config="use_azuread_auth=true"
+
+      - name: Plan
+        working-directory: MySimpleNetApp/infra
+        run: terraform plan -input=false -out=tfplan -var "image_tag=${{ inputs.image_tag }}"
+
+      - name: Apply
+        working-directory: MySimpleNetApp/infra
+        run: terraform apply -input=false tfplan
+
+      - name: Read application URL
+        id: app
+        working-directory: MySimpleNetApp/infra
+        run: echo "url=$(terraform output -raw app_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test the deployed application
+        env:
+          APP_URL: ${{ steps.app.outputs.url }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if curl -fsS "$APP_URL/health/ready" > /dev/null; then
+              echo "Application is ready after ${attempt} attempt(s): $APP_URL"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Application did not become ready within 150 seconds: $APP_URL"
+          exit 1
