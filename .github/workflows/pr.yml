@@ -1,0 +1,89 @@
+name: Pull request
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  metadata:
+    name: PR title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check pull request title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          pattern='^(feat|fix|chore|docs|ci|test|refactor|build|perf)(\([a-z0-9._-]+\))?: .+$'
+          if [[ ! "$TITLE" =~ $pattern ]]; then
+            echo "::error::Pull request title does not follow Conventional Commits. Example: 'ci: add pull request checks'."
+            exit 1
+          fi
+          echo "Pull request title is valid: $TITLE"
+          {
+            echo "### Pull request title"
+            echo ""
+            echo "- Title: $TITLE"
+            echo "- Result: matches the Conventional Commits pattern"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  infra:
+    name: Terraform
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Detect infrastructure changes
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep '^MySimpleNetApp/infra/' || true)
+          if [ -n "$changed" ]; then
+            echo "infra=true" >> "$GITHUB_OUTPUT"
+            echo "Infrastructure changes detected:"
+            echo "$changed"
+          else
+            echo "infra=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under MySimpleNetApp/infra, so the Terraform steps are skipped."
+          fi
+      - name: Install Terraform
+        if: steps.changes.outputs.infra == 'true'
+        uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: 1.16.6
+          terraform_wrapper: false
+      - name: Check Terraform formatting
+        if: steps.changes.outputs.infra == 'true'
+        working-directory: MySimpleNetApp/infra
+        run: terraform fmt -check -recursive
+      - name: Validate Terraform configuration
+        if: steps.changes.outputs.infra == 'true'
+        working-directory: MySimpleNetApp/infra
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate -no-color
+
+  checks:
+    name: Build and tests
+    needs: metadata
+    uses: ./.github/workflows/ci.yml
