@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -26,6 +32,7 @@ jobs:
         run: dotnet build MySimpleNetApp/MySimpleNetApp.sln --configuration Release --no-restore
       - name: Run unit tests
         run: dotnet test MySimpleNetApp/UnitTests/UnitTests.csproj --configuration Release --no-build
+
   docker-build:
     name: Docker image build
     runs-on: ubuntu-latest
